@@ -7,16 +7,18 @@ import (
 	"path/filepath"
 
 	"github.com/gin-gonic/gin"
+	"github.com/granitebps/bwastartup/auth"
 	"github.com/granitebps/bwastartup/helper"
 	"github.com/granitebps/bwastartup/user"
 )
 
 type userHandler struct {
 	userService user.Service
+	authService auth.Service
 }
 
-func NewUserHandler(userService user.Service) *userHandler {
-	return &userHandler{userService}
+func NewUserHandler(userService user.Service, authService auth.Service) *userHandler {
+	return &userHandler{userService, authService}
 }
 
 func (h *userHandler) RegisterUser(c *gin.Context) {
@@ -48,7 +50,19 @@ func (h *userHandler) RegisterUser(c *gin.Context) {
 		return
 	}
 
-	formatter := user.FormatUser(newUser, "JWT Token")
+	token, err := h.authService.GenerateToken(int(newUser.ID))
+	if err != nil {
+		response := helper.APIResponse(
+			"Register Account Failed",
+			http.StatusBadRequest,
+			"error",
+			nil,
+		)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	formatter := user.FormatUser(newUser, token)
 	response := helper.APIResponse(
 		"Account has been registered",
 		http.StatusOK,
@@ -89,7 +103,19 @@ func (h *userHandler) Login(c *gin.Context) {
 		return
 	}
 
-	formatter := user.FormatUser(loggedInUser, "JWT Token")
+	token, err := h.authService.GenerateToken(int(loggedInUser.ID))
+	if err != nil {
+		response := helper.APIResponse(
+			"Login Account Failed",
+			http.StatusBadRequest,
+			"error",
+			nil,
+		)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	formatter := user.FormatUser(loggedInUser, token)
 	response := helper.APIResponse(
 		"Successfully Logged In",
 		http.StatusOK,
@@ -163,7 +189,7 @@ func (h *userHandler) UploadAvatar(c *gin.Context) {
 	}
 
 	// TODO Get User ID from JWT
-	userID := 2
+	userID := 1
 
 	// Create images folder if not exits
 	newpath := filepath.Join(".", "images")
