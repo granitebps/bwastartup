@@ -9,6 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
 	"github.com/granitebps/bwastartup/auth"
+	"github.com/granitebps/bwastartup/campaign"
 	"github.com/granitebps/bwastartup/handler"
 	"github.com/granitebps/bwastartup/helper"
 	"github.com/granitebps/bwastartup/user"
@@ -24,12 +25,20 @@ func main() {
 		log.Fatal(err.Error())
 	}
 
-	db.AutoMigrate(&user.User{})
+	db.AutoMigrate(&user.User{}, &campaign.Campaign{}, &campaign.CampaignImage{})
 
+	// User
 	userRepository := user.NewRepository(db)
 	userService := user.NewService(userRepository)
+
+	// Campaign
+	campaignRepository := campaign.NewRepository(db)
+	fmt.Println(campaignRepository.FindAll())
+
+	// Auth
 	authService := auth.NewService()
 
+	// Handlers
 	userHandler := handler.NewUserHandler(userService, authService)
 
 	router := gin.Default()
