@@ -188,8 +188,8 @@ func (h *userHandler) UploadAvatar(c *gin.Context) {
 		return
 	}
 
-	// TODO Get User ID from JWT
-	userID := 1
+	currentUser := c.MustGet("currentUser").(user.User)
+	userID := int(currentUser.ID)
 
 	// Create images folder if not exits
 	newpath := filepath.Join(".", "images")
