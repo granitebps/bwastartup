@@ -33,7 +33,8 @@ func main() {
 
 	// Campaign
 	campaignRepository := campaign.NewRepository(db)
-	fmt.Println(campaignRepository.FindAll())
+	campaignService := campaign.NewService(campaignRepository)
+	fmt.Println(campaignService.FindCampaigns(0))
 
 	// Auth
 	authService := auth.NewService()
