@@ -1,6 +1,9 @@
 package campaign
 
-import "gorm.io/gorm"
+import (
+	"github.com/granitebps/bwastartup/user"
+	"gorm.io/gorm"
+)
 
 type Campaign struct {
 	gorm.Model
@@ -15,6 +18,7 @@ type Campaign struct {
 	Slug             string
 
 	CampaignImages []CampaignImage
+	User           user.User
 }
 
 type CampaignImage struct {
