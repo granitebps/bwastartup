@@ -1,6 +1,7 @@
 package transaction
 
 import (
+	"github.com/granitebps/bwastartup/campaign"
 	"github.com/granitebps/bwastartup/user"
 	"gorm.io/gorm"
 )
@@ -13,5 +14,6 @@ type Transaction struct {
 	Status     string
 	Code       string
 
-	User user.User
+	User     user.User
+	Campaign campaign.Campaign
 }
