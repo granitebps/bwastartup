@@ -12,6 +12,7 @@ import (
 	"github.com/granitebps/bwastartup/campaign"
 	"github.com/granitebps/bwastartup/handler"
 	"github.com/granitebps/bwastartup/helper"
+	"github.com/granitebps/bwastartup/transaction"
 	"github.com/granitebps/bwastartup/user"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -25,7 +26,12 @@ func main() {
 		log.Fatal(err.Error())
 	}
 
-	db.AutoMigrate(&user.User{}, &campaign.Campaign{}, &campaign.CampaignImage{})
+	db.AutoMigrate(
+		&user.User{},
+		&campaign.Campaign{},
+		&campaign.CampaignImage{},
+		&transaction.Transaction{},
+	)
 
 	// User
 	userRepository := user.NewRepository(db)
