@@ -1,12 +1,17 @@
 package transaction
 
-import "gorm.io/gorm"
+import (
+	"github.com/granitebps/bwastartup/user"
+	"gorm.io/gorm"
+)
 
 type Transaction struct {
 	gorm.Model
-	CampaignID int
-	UserID     int
+	CampaignID uint
+	UserID     uint
 	Amount     int
 	Status     string
 	Code       string
+
+	User user.User
 }
