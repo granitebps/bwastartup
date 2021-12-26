@@ -5,16 +5,18 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/granitebps/bwastartup/helper"
+	"github.com/granitebps/bwastartup/payment"
 	"github.com/granitebps/bwastartup/transaction"
 	"github.com/granitebps/bwastartup/user"
 )
 
 type transactionHandler struct {
-	service transaction.Service
+	service        transaction.Service
+	paymentService payment.Service
 }
 
-func NewTransactionHandler(service transaction.Service) *transactionHandler {
-	return &transactionHandler{service}
+func NewTransactionHandler(service transaction.Service, paymentService payment.Service) *transactionHandler {
+	return &transactionHandler{service, paymentService}
 }
 
 func (h *transactionHandler) GetCampaignTransactions(c *gin.Context) {
@@ -119,4 +121,33 @@ func (h *transactionHandler) CreateTransaction(c *gin.Context) {
 		transaction.FormatTransaction(newTransaction),
 	)
 	c.JSON(http.StatusOK, response)
+}
+
+func (h *transactionHandler) GetNotification(c *gin.Context) {
+	var input transaction.TransactionNotificationInput
+	err := c.ShouldBindJSON(&input)
+	if err != nil {
+		response := helper.APIResponse(
+			"Failed to process notification",
+			http.StatusBadRequest,
+			"error",
+			nil,
+		)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	err = h.paymentService.ProcessPayment(input)
+	if err != nil {
+		response := helper.APIResponse(
+			"Failed to process notification",
+			http.StatusBadRequest,
+			"error",
+			nil,
+		)
+		c.JSON(http.StatusBadRequest, response)
+		return
+	}
+
+	c.JSON(http.StatusOK, input)
 }

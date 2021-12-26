@@ -34,28 +34,22 @@ func main() {
 		&transaction.Transaction{},
 	)
 
-	// Payment
-	paymentService := payment.NewService()
-
-	// User
+	// Repository
 	userRepository := user.NewRepository(db)
-	userService := user.NewService(userRepository)
-
-	// Campaign
 	campaignRepository := campaign.NewRepository(db)
-	campaignService := campaign.NewService(campaignRepository)
-
-	// Transaction
 	transactionRepository := transaction.NewRepository(db)
-	transactionService := transaction.NewService(transactionRepository, campaignRepository, paymentService)
 
-	// Auth
+	// Service
+	paymentService := payment.NewService(transactionRepository, campaignRepository)
+	userService := user.NewService(userRepository)
+	campaignService := campaign.NewService(campaignRepository)
+	transactionService := transaction.NewService(transactionRepository, campaignRepository, paymentService)
 	authService := auth.NewService()
 
 	// Handlers
 	userHandler := handler.NewUserHandler(userService, authService)
 	campaignHandler := handler.NewCampaignHandler(campaignService)
-	transactionHandler := handler.NewTransactionHandler(transactionService)
+	transactionHandler := handler.NewTransactionHandler(transactionService, paymentService)
 
 	router := gin.Default()
 
@@ -77,6 +71,7 @@ func main() {
 
 	api.GET("/transactions", authMiddleware(authService, userService), transactionHandler.GetUserTransactions)
 	api.POST("/transactions", authMiddleware(authService, userService), transactionHandler.CreateTransaction)
+	api.POST("/transactions/notification", transactionHandler.GetNotification)
 
 	router.Run()
 
