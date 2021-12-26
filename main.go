@@ -12,6 +12,7 @@ import (
 	"github.com/granitebps/bwastartup/campaign"
 	"github.com/granitebps/bwastartup/handler"
 	"github.com/granitebps/bwastartup/helper"
+	"github.com/granitebps/bwastartup/payment"
 	"github.com/granitebps/bwastartup/transaction"
 	"github.com/granitebps/bwastartup/user"
 	"gorm.io/driver/mysql"
@@ -33,6 +34,9 @@ func main() {
 		&transaction.Transaction{},
 	)
 
+	// Payment
+	paymentService := payment.NewService()
+
 	// User
 	userRepository := user.NewRepository(db)
 	userService := user.NewService(userRepository)
@@ -43,7 +47,7 @@ func main() {
 
 	// Transaction
 	transactionRepository := transaction.NewRepository(db)
-	transactionService := transaction.NewService(transactionRepository, campaignRepository)
+	transactionService := transaction.NewService(transactionRepository, campaignRepository, paymentService)
 
 	// Auth
 	authService := auth.NewService()
@@ -72,6 +76,7 @@ func main() {
 	api.GET("/campaigns/:id/transactions", authMiddleware(authService, userService), transactionHandler.GetCampaignTransactions)
 
 	api.GET("/transactions", authMiddleware(authService, userService), transactionHandler.GetUserTransactions)
+	api.POST("/transactions", authMiddleware(authService, userService), transactionHandler.CreateTransaction)
 
 	router.Run()
 
