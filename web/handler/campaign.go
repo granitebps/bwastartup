@@ -1,7 +1,11 @@
 package handler
 
 import (
+	"fmt"
 	"net/http"
+	"os"
+	"path/filepath"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/granitebps/bwastartup/campaign"
@@ -71,6 +75,62 @@ func (h *campaignHandler) Create(c *gin.Context) {
 	createCampaignInput.User = user
 
 	_, err = h.campaignService.CreateCampaign(createCampaignInput)
+	if err != nil {
+		c.HTML(http.StatusInternalServerError, "error.html", nil)
+		return
+	}
+
+	c.Redirect(http.StatusFound, "/campaigns")
+}
+
+func (h *campaignHandler) NewImage(c *gin.Context) {
+	idParam := c.Param("id")
+	id, _ := strconv.Atoi(idParam)
+
+	c.HTML(http.StatusOK, "campaign_image.html", gin.H{"ID": id})
+}
+
+func (h *campaignHandler) CreateImage(c *gin.Context) {
+	idParam := c.Param("id")
+	id, _ := strconv.Atoi(idParam)
+
+	file, err := c.FormFile("file")
+	if err != nil {
+		c.HTML(http.StatusInternalServerError, "error.html", nil)
+		return
+	}
+
+	existingCampaign, err := h.campaignService.GetCampaignByID(campaign.GetCampaignDetailInput{ID: id})
+	if err != nil {
+		c.HTML(http.StatusInternalServerError, "error.html", nil)
+		return
+	}
+
+	userID := existingCampaign.UserID
+
+	// Create images folder if not exits
+	newpath := filepath.Join(".", "images")
+	os.MkdirAll(newpath, os.ModePerm)
+
+	path := fmt.Sprintf("images/%d-%s", userID, file.Filename)
+	err = c.SaveUploadedFile(file, path)
+	if err != nil {
+		c.HTML(http.StatusInternalServerError, "error.html", nil)
+		return
+	}
+
+	userCampaign, err := h.userService.GetUserByID(int(userID))
+	if err != nil {
+		c.HTML(http.StatusInternalServerError, "error.html", nil)
+		return
+	}
+
+	createCampaignImageInput := campaign.CreateCampaignImageInput{}
+	createCampaignImageInput.CampaignID = id
+	createCampaignImageInput.IsPrimary = true
+	createCampaignImageInput.User = userCampaign
+
+	_, err = h.campaignService.SaveCampaignImage(createCampaignImageInput, path)
 	if err != nil {
 		c.HTML(http.StatusInternalServerError, "error.html", nil)
 		return
