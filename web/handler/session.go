@@ -41,3 +41,11 @@ func (h *sessionHandler) Create(c *gin.Context) {
 
 	c.Redirect(http.StatusFound, "/users")
 }
+
+func (h *sessionHandler) Destroy(c *gin.Context) {
+	session := sessions.Default(c)
+	session.Clear()
+	session.Save()
+
+	c.Redirect(http.StatusFound, "/login")
+}
